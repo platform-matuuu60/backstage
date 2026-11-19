@@ -1,0 +1,52 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: idp
+  description: Internal developer platform.
+  links:
+    - url: https://github.com/platform-matuuu60/platform
+      title: Platform repository
+spec:
+  owner: platform-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage
+  description: Developer portal of the platform.
+  annotations:
+    github.com/project-slug: platform-matuuu60/backstage
+    backstage.io/kubernetes-id: backstage
+spec:
+  type: website
+  lifecycle: production
+  owner: platform-team
+  system: idp
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: hello-api
+  description: Sample serverless API (ServerlessApp on Floci).
+  annotations:
+    github.com/project-slug: platform-matuuu60/gitops
+  links:
+    - url: https://github.com/platform-matuuu60/gitops/blob/main/teams/team-shop/hello-api.yaml
+      title: ServerlessApp manifest
+spec:
+  type: service
+  lifecycle: experimental
+  owner: team-shop
+  system: idp
+  dependsOn:
+    - resource:idp-artifacts
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: idp-artifacts
+  description: Bucket for function packages, managed by Terraform.
+spec:
+  type: s3-bucket
+  owner: platform-team
+  system: idp

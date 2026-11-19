@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: idp-catalog
+  description: Entities of the IDP platform.
+spec:
+  targets:
+    - ./org.yaml
+    - ./system.yaml
