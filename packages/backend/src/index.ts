@@ -71,4 +71,9 @@ backend.add(import('@backstage/plugin-signals-backend'));
 // mcp actions plugin
 backend.add(import('@backstage/plugin-mcp-actions-backend'));
 
+// users and groups from the Keycloak realm
+backend.add(
+  import('@backstage-community/plugin-catalog-backend-module-keycloak'),
+);
+
 backend.start();

@@ -36,9 +36,9 @@ auth:
         prompt: auto
         signIn:
           resolvers:
-            # Access is controlled by the Keycloak realm (no self-registration).
-            - resolver: emailLocalPartMatchingUserEntityName
-              dangerouslyAllowSignInWithoutUserInCatalog: true
+            # Users come from the Keycloak realm through catalog.providers.keycloakOrg,
+            # so only people synced into the catalog can sign in.
+            - resolver: emailMatchingUserEntityProfileEmail
 
 kubernetes:
   serviceLocatorMethod:
@@ -53,7 +53,31 @@ kubernetes:
 
 catalog:
   rules:
-    - allow: [Component, System, API, Resource, Location, Domain, Group, User, Template]
+    - allow:
+        [
+          Component,
+          System,
+          API,
+          Resource,
+          Location,
+          Domain,
+          Group,
+          User,
+          Template,
+        ]
   locations:
     - type: url
       target: https://github.com/platform-matuuu60/backstage/blob/main/catalog/all.yaml
+  providers:
+    # Users and groups are owned by Keycloak (realm idp); the catalog mirrors them.
+    keycloakOrg:
+      default:
+        baseUrl: ${KEYCLOAK_BASE_URL}
+        loginRealm: idp
+        realm: idp
+        clientId: ${KEYCLOAK_CATALOG_CLIENT_ID}
+        clientSecret: ${KEYCLOAK_CATALOG_CLIENT_SECRET}
+        schedule:
+          frequency: { minutes: 5 }
+          timeout: { minutes: 2 }
+          initialDelay: { seconds: 30 }
