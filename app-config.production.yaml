@@ -1,7 +1,12 @@
 # Production config. Every value that differs per environment or is secret comes
 # from environment variables set by the Kubernetes Deployment.
 app:
+  title: IDP Portal
   baseUrl: ${APP_BASE_URL}
+
+# Sign in through an in-window redirect to Keycloak instead of a popup, which
+# browsers block by default.
+enableExperimentalRedirectFlow: true
 
 backend:
   baseUrl: ${APP_BASE_URL}
