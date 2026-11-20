@@ -31,12 +31,12 @@ metadata:
   annotations:
     github.com/project-slug: platform-matuuu60/gitops
   links:
-    - url: https://github.com/platform-matuuu60/gitops/blob/main/teams/team-shop/hello-api.yaml
+    - url: https://github.com/platform-matuuu60/gitops/blob/main/teams/team-demo/hello-api.yaml
       title: ServerlessApp manifest
 spec:
   type: service
   lifecycle: experimental
-  owner: team-shop
+  owner: team-demo
   system: idp
   dependsOn:
     - resource:idp-artifacts
