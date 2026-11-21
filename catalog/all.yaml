@@ -6,3 +6,4 @@ metadata:
 spec:
   targets:
     - ./system.yaml
+    - ../templates/serverless-api/template.yaml

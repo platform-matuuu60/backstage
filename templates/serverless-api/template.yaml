@@ -1,0 +1,113 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: serverless-api
+  title: Serverless API
+  description: >-
+    Python HTTP API on Lambda + API Gateway, provisioned by Crossplane. Creates the
+    repository with CI (security scan, tests, deploy from the idp-k3s runners) and
+    opens a pull request to the gitops repository with the ServerlessApp claim.
+    The owner team must already have its namespace in gitops (teams/<team>).
+  tags: [python, lambda, serverless, recommended]
+spec:
+  owner: group:default/platform-team
+  type: service
+
+  parameters:
+    - title: Service
+      required: [name, owner]
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Repository and service name. Lowercase letters, digits and dashes.
+          pattern: '^[a-z][a-z0-9-]{1,28}[a-z0-9]$'
+          ui:autofocus: true
+        description:
+          title: Description
+          type: string
+          default: Serverless HTTP API
+        owner:
+          title: Owner team
+          type: string
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: Group
+    - title: Deployment
+      properties:
+        target:
+          title: Target
+          type: string
+          description: Where Crossplane provisions the function.
+          enum: [floci]
+          enumNames: ['Floci (local AWS emulator)']
+          default: floci
+
+  steps:
+    - id: app
+      name: Render service
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ./app
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          team: ${{ parameters.owner | parseEntityRef | pick('name') }}
+
+    - id: publish
+      name: Create repository
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=platform-matuuu60&repo=${{ parameters.name }}
+        sourcePath: ./app
+        description: ${{ parameters.description }}
+        defaultBranch: main
+        repoVisibility: public
+        deleteBranchOnMerge: true
+        protectDefaultBranch: false
+
+    - id: claim
+      name: Render ServerlessApp claim
+      action: fetch:template
+      input:
+        url: ./gitops
+        targetPath: ./gitops/teams/${{ parameters.owner | parseEntityRef | pick('name') }}
+        values:
+          name: ${{ parameters.name }}
+          team: ${{ parameters.owner | parseEntityRef | pick('name') }}
+          target: ${{ parameters.target }}
+
+    - id: gitops-pr
+      name: Open gitops pull request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=platform-matuuu60&repo=gitops
+        sourcePath: ./gitops
+        branchName: scaffolder/${{ parameters.name }}
+        title: 'feat(${{ parameters.owner | parseEntityRef | pick("name") }}): add ServerlessApp ${{ parameters.name }}'
+        description: |
+          Created from the Backstage template **Serverless API**.
+
+          Merging this provisions the function, its IAM role and an HTTP API on
+          `${{ parameters.target }}` through Crossplane. The service CI publishes the code
+          package to `idp-artifacts/${{ parameters.name }}/latest.zip`.
+
+    - id: register
+      name: Register in catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Gitops pull request
+        url: ${{ steps['gitops-pr'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}

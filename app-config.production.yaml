@@ -40,6 +40,18 @@ auth:
             # so only people synced into the catalog can sign in.
             - resolver: emailMatchingUserEntityProfileEmail
 
+integrations:
+  github:
+    # GitHub App idp-backstage-platform-matuuu60: reads catalog files and lets the
+    # scaffolder create repositories and open pull requests in the organization.
+    - host: github.com
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_APP_CLIENT_ID}
+          clientSecret: ${GITHUB_APP_CLIENT_SECRET}
+          privateKey: ${GITHUB_APP_PRIVATE_KEY}
+          allowedInstallationOwners: [platform-matuuu60]
+
 kubernetes:
   serviceLocatorMethod:
     type: multiTenant
