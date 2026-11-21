@@ -1,0 +1,13 @@
+apiVersion: platform.idp.internal/v1alpha1
+kind: ServerlessWorker
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.team }}
+spec:
+  target: ${{ values.target }}
+  batchSize: ${{ values.batchSize }}
+  maxReceiveCount: ${{ values.maxReceiveCount }}
+  artifact:
+    bucket: idp-artifacts
+    # Stable key: the worker CI uploads every build here and updates the function code.
+    key: ${{ values.name }}/latest.zip

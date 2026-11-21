@@ -7,3 +7,5 @@ spec:
   targets:
     - ./system.yaml
     - ../templates/serverless-api/template.yaml
+    - ../templates/serverless-worker/template.yaml
+    - ../templates/dynamodb-table/template.yaml

@@ -1,0 +1,120 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: dynamodb-table
+  title: Add a DynamoDB table
+  description: >-
+    Day-2 template: attaches a DynamoDB table to an existing Serverless API or Serverless
+    Worker. Opens a pull request to the gitops repository with a Table claim. Once merged,
+    Crossplane creates the table, grants the service's function role access to that table
+    only, and injects the table name as an environment variable.
+  tags: [dynamodb, database, day-2]
+spec:
+  owner: group:default/platform-team
+  type: resource
+
+  parameters:
+    - title: Service
+      required: [component]
+      properties:
+        component:
+          title: Service
+          type: string
+          description: Serverless API or worker that uses the table.
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: Component
+              metadata.tags: lambda
+    - title: Table
+      required: [table, partitionKey]
+      properties:
+        table:
+          title: Table name
+          type: string
+          description: Short name within the service, for example orders.
+          pattern: '^[a-z][a-z0-9-]{0,18}[a-z0-9]$'
+        partitionKey:
+          title: Partition key
+          type: string
+          pattern: '^[A-Za-z_][A-Za-z0-9_]{0,63}$'
+          default: id
+        partitionKeyType:
+          title: Partition key type
+          type: string
+          enum: [S, N]
+          enumNames: [String, Number]
+          default: S
+        sortKey:
+          title: Sort key (optional)
+          type: string
+          pattern: '^[A-Za-z_][A-Za-z0-9_]{0,63}$'
+        sortKeyType:
+          title: Sort key type
+          type: string
+          enum: [S, N]
+          enumNames: [String, Number]
+          default: S
+        access:
+          title: Access
+          type: string
+          description: Permissions of the service on this table. No other table is reachable.
+          enum: [readwrite, read]
+          enumNames: [Read and write, Read only]
+          default: readwrite
+        target:
+          title: Target
+          type: string
+          description: Must match where the service runs.
+          enum: [floci]
+          enumNames: ['Floci (local AWS emulator)']
+          default: floci
+
+  steps:
+    - id: service
+      name: Look up service
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.component }}
+
+    - id: claim
+      name: Render Table claim
+      action: fetch:template
+      input:
+        url: ./gitops
+        targetPath: ./gitops/teams/${{ steps.service.output.entity.spec.owner | parseEntityRef | pick('name') }}
+        values:
+          app: ${{ steps.service.output.entity.metadata.name }}
+          team: ${{ steps.service.output.entity.spec.owner | parseEntityRef | pick('name') }}
+          table: ${{ parameters.table }}
+          partitionKey: ${{ parameters.partitionKey }}
+          partitionKeyType: ${{ parameters.partitionKeyType }}
+          sortKey: ${{ parameters.sortKey }}
+          sortKeyType: ${{ parameters.sortKeyType }}
+          access: ${{ parameters.access }}
+          target: ${{ parameters.target }}
+
+    - id: gitops-pr
+      name: Open gitops pull request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=platform-matuuu60&repo=gitops
+        sourcePath: ./gitops
+        branchName: scaffolder/${{ steps.service.output.entity.metadata.name }}-table-${{ parameters.table }}
+        title: 'feat(${{ steps.service.output.entity.spec.owner | parseEntityRef | pick("name") }}): add table ${{ parameters.table }} to ${{ steps.service.output.entity.metadata.name }}'
+        description: |
+          Created from the Backstage template **Add a DynamoDB table**.
+
+          Merging this creates the DynamoDB table for `${{ steps.service.output.entity.metadata.name }}`
+          (partition key `${{ parameters.partitionKey }}`) on `${{ parameters.target }}` and grants
+          the service's function role `${{ parameters.access }}` access to this table only.
+          The function receives the table name in the environment variable
+          `TABLE_${{ parameters.table | upper | replace("-", "_") }}`.
+
+  output:
+    links:
+      - title: Gitops pull request
+        url: ${{ steps['gitops-pr'].output.remoteUrl }}
+      - title: Service
+        icon: catalog
+        entityRef: ${{ parameters.component }}
