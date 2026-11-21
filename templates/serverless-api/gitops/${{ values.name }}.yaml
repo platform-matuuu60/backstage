@@ -1,0 +1,11 @@
+apiVersion: platform.idp.internal/v1alpha1
+kind: ServerlessApp
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.team }}
+spec:
+  target: ${{ values.target }}
+  artifact:
+    bucket: idp-artifacts
+    # Stable key: the service CI uploads every build here and updates the function code.
+    key: ${{ values.name }}/latest.zip
