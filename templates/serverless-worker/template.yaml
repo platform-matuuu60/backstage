@@ -8,7 +8,6 @@ metadata:
     and partial batch retries, provisioned by Crossplane. Creates the repository with CI
     (security scan, tests, deploy from the idp-k3s runners) and opens a pull request to
     the gitops repository with the ServerlessWorker claim.
-    The owner team must already have its namespace in gitops (teams/<team>).
   tags: [python, lambda, sqs, serverless, async]
 spec:
   owner: group:default/platform-team
