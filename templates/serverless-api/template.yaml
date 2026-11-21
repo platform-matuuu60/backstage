@@ -7,7 +7,6 @@ metadata:
     Python HTTP API on Lambda + API Gateway, provisioned by Crossplane. Creates the
     repository with CI (security scan, tests, deploy from the idp-k3s runners) and
     opens a pull request to the gitops repository with the ServerlessApp claim.
-    The owner team must already have its namespace in gitops (teams/<team>).
   tags: [python, lambda, serverless, recommended]
 spec:
   owner: group:default/platform-team
