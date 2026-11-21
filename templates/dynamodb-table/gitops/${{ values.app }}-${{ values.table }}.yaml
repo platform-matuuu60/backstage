@@ -1,0 +1,20 @@
+apiVersion: platform.idp.internal/v1alpha1
+kind: Table
+metadata:
+  name: ${{ values.app }}-${{ values.table }}
+  namespace: ${{ values.team }}
+  labels:
+    # The app composition looks up its tables by this label to inject the table name.
+    platform.idp.internal/app: ${{ values.app }}
+spec:
+  target: ${{ values.target }}
+  app: ${{ values.app }}
+  access: ${{ values.access }}
+  partitionKey:
+    name: ${{ values.partitionKey }}
+    type: ${{ values.partitionKeyType }}
+{%- if values.sortKey %}
+  sortKey:
+    name: ${{ values.sortKey }}
+    type: ${{ values.sortKeyType }}
+{%- endif %}
